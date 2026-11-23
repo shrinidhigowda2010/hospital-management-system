@@ -4,4 +4,5 @@ hospital.db
 .venv/
 venv/
 *.sqlite
+*.mp4
 .DS_Store
