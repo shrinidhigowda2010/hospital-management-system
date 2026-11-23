@@ -1,0 +1,7 @@
+__pycache__/
+*.py[cod]
+hospital.db
+.venv/
+venv/
+*.sqlite
+.DS_Store

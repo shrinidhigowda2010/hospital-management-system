@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block content %}
+{% include "includes/admission_nav.html" %}
+<div class="page-head">
+  <div>
+    <h2>{{ page_title }}</h2>
+    <p class="schema-line">Admitting a patient inserts ADMISSION and sets BED.status to Occupied in one transaction.</p>
+  </div>
+</div>
+<div class="panel panel-pad" style="max-width:760px;">
+  {% if errors %}
+  <div class="alert alert-danger"><ul class="mb-0">{% for error in errors %}<li>{{ error }}</li>{% endfor %}</ul></div>
+  {% endif %}
+  <pre class="sql-block mb-3">BEGIN;
+INSERT INTO ADMISSION (patient_id, doctor_id, bed_id, admit_date, reason, status) VALUES (?, ?, ?, ?, ?, 'Admitted');
+UPDATE BED SET status = 'Occupied' WHERE bed_id = ?;
+COMMIT;</pre>
+  <form method="post">
+    <div class="mb-3">
+      <label class="form-label" for="patient_id">Patient</label>
+      <select class="form-select" id="patient_id" name="patient_id" required>
+        <option value="">Choose a patient</option>
+        {% for patient in patients %}
+        <option value="{{ patient.patient_id }}" {% if form.patient_id|string == patient.patient_id|string %}selected{% endif %}>{{ patient.name }} · {{ patient.age }} yrs</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="mb-3">
+      <label class="form-label" for="doctor_id">Consultant</label>
+      <select class="form-select" id="doctor_id" name="doctor_id" required>
+        <option value="">Choose a doctor</option>
+        {% for doctor in doctors %}
+        <option value="{{ doctor.doctor_id }}" {% if form.doctor_id|string == doctor.doctor_id|string %}selected{% endif %}>Dr. {{ doctor.name }} · {{ doctor.speciality }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="row">
+      <div class="col-md-6 mb-3">
+        <label class="form-label" for="bed_id">Bed</label>
+        <select class="form-select" id="bed_id" name="bed_id" required>
+          <option value="">Choose a free bed</option>
+          {% for bed in beds %}
+          <option value="{{ bed.bed_id }}" {% if form.bed_id|string == bed.bed_id|string %}selected{% endif %}>{{ bed.ward_name }} · {{ bed.bed_number }}{% if bed.status != 'Available' %} ({{ bed.status }}){% endif %}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-6 mb-3">
+        <label class="form-label" for="admit_date">Admitted on</label>
+        <input class="form-control" type="date" id="admit_date" name="admit_date" value="{{ form.admit_date }}" required>
+      </div>
+    </div>
+    <div class="mb-3">
+      <label class="form-label" for="reason">Reason</label>
+      <input class="form-control" id="reason" name="reason" value="{{ form.reason }}" required>
+    </div>
+    <button class="btn btn-teal" type="submit">Save admission</button>
+    <a class="btn btn-outline-secondary" href="{{ url_for('admission_list') }}">Cancel</a>
+  </form>
+</div>
+{% endblock %}

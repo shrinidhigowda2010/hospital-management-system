@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h2>{{ page_title }}</h2>
+    <p class="schema-line"><code>DEPARTMENT(dept_id, dept_name, location)</code></p>
+  </div>
+</div>
+<div class="panel panel-pad" style="max-width:640px;">
+  {% if errors %}
+  <div class="alert alert-danger"><ul class="mb-0">{% for error in errors %}<li>{{ error }}</li>{% endfor %}</ul></div>
+  {% endif %}
+  <form method="post">
+    <div class="mb-3">
+      <label class="form-label" for="dept_name">Department name</label>
+      <input class="form-control" id="dept_name" name="dept_name" value="{{ form.dept_name }}" required>
+    </div>
+    <div class="mb-3">
+      <label class="form-label" for="location">Location</label>
+      <input class="form-control" id="location" name="location" value="{{ form.location }}" required>
+    </div>
+    <button class="btn btn-teal" type="submit">Save department</button>
+    <a class="btn btn-outline-secondary" href="{{ url_for('department_list') }}">Cancel</a>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h2>Edit clinic hours</h2>
+    <p class="schema-line"><code>DOCTOR_SCHEDULE(schedule_id, doctor_id, day_of_week, start_time, end_time)</code></p>
+  </div>
+</div>
+<div class="panel panel-pad" style="max-width:640px;">
+  {% if errors %}
+  <div class="alert alert-danger"><ul class="mb-0">{% for error in errors %}<li>{{ error }}</li>{% endfor %}</ul></div>
+  {% endif %}
+  <form method="post">
+    <div class="mb-3">
+      <label class="form-label" for="day_of_week">Day</label>
+      <select class="form-select" id="day_of_week" name="day_of_week">
+        {% for day in days %}
+        <option {% if form.day_of_week == day %}selected{% endif %}>{{ day }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="row">
+      <div class="col-md-6 mb-3">
+        <label class="form-label" for="start_time">Start</label>
+        <input class="form-control" type="time" id="start_time" name="start_time" value="{{ form.start_time }}" required>
+      </div>
+      <div class="col-md-6 mb-3">
+        <label class="form-label" for="end_time">End</label>
+        <input class="form-control" type="time" id="end_time" name="end_time" value="{{ form.end_time }}" required>
+      </div>
+    </div>
+    <button class="btn btn-teal" type="submit">Save hours</button>
+    <a class="btn btn-outline-secondary" href="{{ url_for('doctor_detail', doctor_id=doctor_id) }}">Cancel</a>
+  </form>
+</div>
+{% endblock %}

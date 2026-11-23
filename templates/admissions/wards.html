@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block content %}
+{% include "includes/admission_nav.html" %}
+<div class="page-head">
+  <div>
+    <h2>Wards</h2>
+    <p class="schema-line"><code>WARD(ward_id, ward_name, ward_type, location)</code></p>
+  </div>
+  {% if can('wards_write') %}
+  <a class="btn btn-teal" href="{{ url_for('ward_add') }}">Add ward</a>
+  {% endif %}
+</div>
+<div class="panel">
+  <div class="table-responsive">
+    <table class="table mb-0">
+      <thead><tr><th>Name</th><th>Type</th><th>Location</th><th>Beds</th><th>Occupied</th><th></th></tr></thead>
+      <tbody>
+        {% for ward in wards %}
+        <tr>
+          <td>{{ ward.ward_name }}</td>
+          <td>{{ ward.ward_type }}</td>
+          <td>{{ ward.location }}</td>
+          <td>{{ ward.bed_count }}</td>
+          <td>{{ ward.occupied }}</td>
+          <td class="text-end text-nowrap">
+            {% if can('wards_write') %}
+            <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('ward_edit', ward_id=ward.ward_id) }}">Edit</a>
+            <form method="post" action="{{ url_for('ward_delete', ward_id=ward.ward_id) }}" class="d-inline" onsubmit="return confirm('Delete this ward?');">
+              <button class="btn btn-sm btn-outline-danger">Delete</button>
+            </form>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h2>{{ doctor.name|doctor }}</h2>
+    <p class="schema-line">{{ doctor.speciality }} · {{ doctor.dept_name }}, {{ doctor.location }} · {{ doctor.phone }}</p>
+  </div>
+  {% if can('doctors_write') %}
+  <a class="btn btn-outline-secondary" href="{{ url_for('doctor_edit', doctor_id=doctor.doctor_id) }}">Edit details</a>
+  {% endif %}
+</div>
+<div class="row g-3">
+  <div class="col-lg-6">
+    <section class="panel">
+      <div class="panel-pad pb-0">
+        <h3 class="h6">Schedule</h3>
+        <p class="source">DOCTOR_SCHEDULE. Booking uses these hours to build 30-minute slots.</p>
+      </div>
+      {% if schedules %}
+      <div class="table-responsive">
+        <table class="table mb-0">
+          <thead><tr><th>Day</th><th>From</th><th>To</th><th></th></tr></thead>
+          <tbody>
+            {% for block in schedules %}
+            <tr>
+              <td>{{ block.day_of_week }}</td>
+              <td>{{ block.start_time }}</td>
+              <td>{{ block.end_time }}</td>
+              <td class="text-end text-nowrap">
+                {% if can('doctors_write') %}
+                <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('schedule_edit', doctor_id=doctor.doctor_id, schedule_id=block.schedule_id) }}">Edit</a>
+                <form method="post" action="{{ url_for('schedule_delete', doctor_id=doctor.doctor_id, schedule_id=block.schedule_id) }}" class="d-inline" onsubmit="return confirm('Remove these hours?');">
+                  <button class="btn btn-sm btn-outline-danger">Delete</button>
+                </form>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}<p class="empty-state mb-0">No clinic hours yet.</p>{% endif %}
+      {% if can('doctors_write') %}
+      <form method="post" action="{{ url_for('schedule_add', doctor_id=doctor.doctor_id) }}" class="panel-pad row g-2">
+        <div class="col-md-4">
+          <select class="form-select" name="day_of_week" required>
+            {% for day in days %}<option>{{ day }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="col-md-3"><input class="form-control" type="time" name="start_time" value="09:00" required></div>
+        <div class="col-md-3"><input class="form-control" type="time" name="end_time" value="13:00" required></div>
+        <div class="col-md-2"><button class="btn btn-teal w-100" type="submit">Add</button></div>
+      </form>
+      {% endif %}
+    </section>
+  </div>
+  <div class="col-lg-6">
+    <section class="panel">
+      <div class="panel-pad pb-0"><h3 class="h6">From today onward</h3></div>
+      {% if upcoming %}
+      <div class="table-responsive">
+        <table class="table mb-0">
+          <thead><tr><th>When</th><th>Patient</th><th>Queue</th><th>Status</th></tr></thead>
+          <tbody>
+            {% for row in upcoming %}
+            <tr>
+              <td>{{ row.date|pretty_date }} {{ row.time }}</td>
+              <td>{{ row.patient_name }}</td>
+              <td>{{ row.queue_no or "—" }}</td>
+              <td><span class="badge text-bg-{{ row.status|badge }}">{{ row.status }}</span></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}<p class="empty-state mb-0">Nothing booked from today onward.</p>{% endif %}
+    </section>
+  </div>
+</div>
+{% endblock %}

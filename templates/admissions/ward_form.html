@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block content %}
+{% include "includes/admission_nav.html" %}
+<div class="page-head">
+  <div>
+    <h2>{{ page_title }}</h2>
+    <p class="schema-line"><code>WARD(ward_id, ward_name, ward_type, location)</code></p>
+  </div>
+</div>
+<div class="panel panel-pad" style="max-width:640px;">
+  {% if errors %}
+  <div class="alert alert-danger"><ul class="mb-0">{% for error in errors %}<li>{{ error }}</li>{% endfor %}</ul></div>
+  {% endif %}
+  <form method="post">
+    <div class="mb-3">
+      <label class="form-label" for="ward_name">Ward name</label>
+      <input class="form-control" id="ward_name" name="ward_name" value="{{ form.ward_name }}" required>
+    </div>
+    <div class="mb-3">
+      <label class="form-label" for="ward_type">Type</label>
+      <input class="form-control" id="ward_type" name="ward_type" value="{{ form.ward_type }}" placeholder="General, ICU, Private" required>
+    </div>
+    <div class="mb-3">
+      <label class="form-label" for="location">Location</label>
+      <input class="form-control" id="location" name="location" value="{{ form.location }}" required>
+    </div>
+    <button class="btn btn-teal" type="submit">Save ward</button>
+    <a class="btn btn-outline-secondary" href="{{ url_for('ward_list') }}">Cancel</a>
+  </form>
+</div>
+{% endblock %}

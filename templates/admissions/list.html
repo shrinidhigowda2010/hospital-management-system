@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block content %}
+{% include "includes/admission_nav.html" %}
+<div class="page-head">
+  <div>
+    <h2>Admissions</h2>
+    <p class="schema-line"><code>ADMISSION(admission_id, patient_id, doctor_id, bed_id, admit_date, discharge_date, reason, status)</code></p>
+  </div>
+  {% if can('admissions_write') %}
+  <a class="btn btn-teal" href="{{ url_for('admission_add') }}">Admit patient</a>
+  {% endif %}
+</div>
+<form class="search-form" method="get">
+  <input class="form-control" type="search" name="q" value="{{ term }}" placeholder="Patient, ward, or bed">
+  <select class="form-select" name="status" style="max-width:180px;">
+    <option value="">Any status</option>
+    {% for status_name in ['Admitted', 'Discharged'] %}
+    <option {% if status == status_name %}selected{% endif %}>{{ status_name }}</option>
+    {% endfor %}
+  </select>
+  <button class="btn btn-outline-secondary">Filter</button>
+</form>
+<div class="panel">
+  {% if admissions %}
+  <div class="table-responsive">
+    <table class="table mb-0">
+      <thead><tr><th>Patient</th><th>Doctor</th><th>Ward / bed</th><th>Admitted</th><th>Discharged</th><th>Reason</th><th>Status</th><th></th></tr></thead>
+      <tbody>
+        {% for row in admissions %}
+        <tr>
+          <td><a href="{{ url_for('patient_detail', patient_id=row.patient_id) }}">{{ row.patient_name }}</a></td>
+          <td>{{ row.doctor_name|doctor }}</td>
+          <td>{{ row.ward_name }} · {{ row.bed_number }}</td>
+          <td>{{ row.admit_date|pretty_date }}</td>
+          <td>{{ row.discharge_date|pretty_date }}</td>
+          <td class="clip" title="{{ row.reason }}">{{ row.reason }}</td>
+          <td><span class="badge text-bg-{{ row.status|badge }}">{{ row.status }}</span></td>
+          <td class="text-nowrap text-end">
+            {% if can('admissions_write') and row.status == 'Admitted' %}
+            <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('admission_edit', admission_id=row.admission_id) }}">Edit</a>
+            <form method="post" action="{{ url_for('admission_discharge', admission_id=row.admission_id) }}" class="d-inline" onsubmit="return confirm('Discharge this patient and free the bed?');">
+              <input type="hidden" name="discharge_date" value="{{ today }}">
+              <button class="btn btn-sm btn-teal" type="submit">Discharge</button>
+            </form>
+            {% endif %}
+            {% if can('admissions_write') %}
+            <form method="post" action="{{ url_for('admission_delete', admission_id=row.admission_id) }}" class="d-inline" onsubmit="return confirm('Delete this admission?');">
+              <button class="btn btn-sm btn-outline-danger">Delete</button>
+            </form>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}<p class="empty-state mb-0">No admissions match that filter.</p>{% endif %}
+</div>
+{% endblock %}

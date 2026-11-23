@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="hello">
+  <h2>{{ greeting }}, {{ signed_in_name() }}</h2>
+  <p>{{ role_note }}</p>
+</div>
+<div class="stat-grid mb-3">
+  <a class="stat-card stat-patients" href="{{ url_for('patient_list') }}">
+    <span class="stat-icon"><i class="bi bi-people"></i></span>
+    <span>
+      <span class="stat-label">Total patients</span>
+      <span class="stat-value">{{ stats.patients }}</span>
+      <span class="stat-note">rows in PATIENT</span>
+    </span>
+  </a>
+  <a class="stat-card stat-admissions" href="{{ url_for('admission_list') }}">
+    <span class="stat-icon"><i class="bi bi-hospital"></i></span>
+    <span>
+      <span class="stat-label">Admissions</span>
+      <span class="stat-value">{{ stats.admitted }}</span>
+      <span class="stat-note">currently admitted</span>
+    </span>
+  </a>
+  <a class="stat-card stat-appointments" href="{{ url_for('appointment_list') }}">
+    <span class="stat-icon"><i class="bi bi-calendar2-check"></i></span>
+    <span>
+      <span class="stat-label">Appointments</span>
+      <span class="stat-value">{{ stats.appointments }}</span>
+      <span class="stat-note">{{ stats.today }} today, {{ today_label }}</span>
+    </span>
+  </a>
+  <a class="stat-card stat-billing" href="{{ url_for('bill_list') }}">
+    <span class="stat-icon"><i class="bi bi-receipt"></i></span>
+    <span>
+      <span class="stat-label">Billing</span>
+      <span class="stat-value">{{ stats.billed|inr }}</span>
+      <span class="stat-note">{{ stats.outstanding|inr }} still outstanding</span>
+    </span>
+  </a>
+</div>
+<div class="row g-3">
+  <div class="col-lg-6">
+    <section class="panel panel-pad chart-card">
+      <h3>Bed occupancy</h3>
+      <p class="source">From the view V_BED_OCCUPANCY (WARD joined to BED).</p>
+      <div class="chart-box"><canvas id="bedChart"></canvas></div>
+    </section>
+  </div>
+  <div class="col-lg-6">
+    <section class="panel panel-pad chart-card">
+      <h3>Billing by month</h3>
+      <p class="source">Billed from BILL, collected from PAYMENT.</p>
+      <div class="chart-box"><canvas id="billChart"></canvas></div>
+    </section>
+  </div>
+  <div class="col-lg-7">
+    <section class="panel">
+      <div class="panel-pad pb-0">
+        <h3 class="h6 mb-1">Today's queue</h3>
+        <p class="source mb-2">Queue numbers are ROW_NUMBER() over today's appointments, not a stored column.</p>
+      </div>
+      {% if queue %}
+      <div class="table-responsive">
+        <table class="table mb-0">
+          <thead><tr><th>#</th><th>Time</th><th>Patient</th><th>Doctor</th><th>Status</th></tr></thead>
+          <tbody>
+            {% for row in queue %}
+            <tr>
+              <td>{{ row.queue_no }}</td>
+              <td>{{ row.time }}</td>
+              <td><a href="{{ url_for('patient_detail', patient_id=row.patient_id) }}">{{ row.patient_name }}</a></td>
+              <td>{{ row.doctor_name|doctor }}</td>
+              <td><span class="badge text-bg-{{ row.status|badge }}">{{ row.status }}</span></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <p class="empty-state mb-0">No live appointments dated {{ today_label }}.</p>
+      {% endif %}
+    </section>
+  </div>
+  <div class="col-lg-5">
+    <section class="panel">
+      <div class="panel-pad pb-0">
+        <h3 class="h6 mb-1">Pharmacy watch</h3>
+        <p class="source mb-2">Stock under {{ reorder_below }}, or expiring within 60 days.</p>
+      </div>
+      {% if low_stock %}
+      <div class="table-responsive">
+        <table class="table mb-0">
+          <thead><tr><th>Medicine</th><th>Stock</th><th>Expiry</th></tr></thead>
+          <tbody>
+            {% for med in low_stock %}
+            <tr class="{% if med.stock_qty < reorder_below %}row-low{% endif %}">
+              <td>{{ med.name }}</td>
+              <td>{{ med.stock_qty }}</td>
+              <td>{{ med.expiry_date|pretty_date }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <p class="empty-state mb-0">Stock and expiry dates look fine.</p>
+      {% endif %}
+    </section>
+  </div>
+</div>
+<details class="sql-panel">
+  <summary>SQL behind this dashboard</summary>
+  <div class="mt-2">
+    {% for title, sql in sql_notes %}
+      <p class="mb-1"><strong>{{ title }}</strong></p>
+      <pre class="sql-block mb-3">{{ sql }}</pre>
+    {% endfor %}
+  </div>
+</details>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='vendor/chart.umd.min.js') }}"></script>
+<script>
+  const data = {{ chart|tojson }};
+  const rupee = (value) => "₹" + Number(value).toLocaleString("en-IN");
+  new Chart(document.getElementById("bedChart"), {
+    type: "bar",
+    data: {
+      labels: data.wards,
+      datasets: [
+        { label: "Occupied", data: data.occupied, backgroundColor: "#b45309" },
+        { label: "Available", data: data.available, backgroundColor: "#0f766e" },
+        { label: "Maintenance", data: data.maintenance, backgroundColor: "#829ab1" }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        x: { stacked: true },
+        y: { stacked: true, beginAtZero: true, ticks: { precision: 0 } }
+      },
+      plugins: { legend: { position: "bottom" } }
+    }
+  });
+  new Chart(document.getElementById("billChart"), {
+    type: "bar",
+    data: {
+      labels: data.months,
+      datasets: [
+        { label: "Billed", data: data.billed, backgroundColor: "#1d4ed8" },
+        { label: "Collected", data: data.collected, backgroundColor: "#0f766e" }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: { y: { beginAtZero: true } },
+      plugins: {
+        legend: { position: "bottom" },
+        tooltip: { callbacks: { label: (ctx) => ctx.dataset.label + ": " + rupee(ctx.parsed.y) } }
+      }
+    }
+  });
+</script>
+{% endblock %}

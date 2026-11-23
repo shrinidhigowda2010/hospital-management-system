@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h2>{{ page_title }}</h2>
+    <p class="schema-line"><code>DOCTOR(doctor_id, name, speciality, phone, dept_id)</code></p>
+  </div>
+</div>
+<div class="panel panel-pad" style="max-width:720px;">
+  {% if errors %}
+  <div class="alert alert-danger"><ul class="mb-0">{% for error in errors %}<li>{{ error }}</li>{% endfor %}</ul></div>
+  {% endif %}
+  <form method="post">
+    <div class="mb-3">
+      <label class="form-label" for="name">Name</label>
+      <input class="form-control" id="name" name="name" value="{{ form.name }}" required>
+      <div class="form-text">Store the name without “Dr.” The screens add that when they display it.</div>
+    </div>
+    <div class="mb-3">
+      <label class="form-label" for="speciality">Speciality</label>
+      <input class="form-control" id="speciality" name="speciality" value="{{ form.speciality }}" required>
+    </div>
+    <div class="row">
+      <div class="col-md-6 mb-3">
+        <label class="form-label" for="phone">Phone</label>
+        <input class="form-control" id="phone" name="phone" value="{{ form.phone }}" required>
+      </div>
+      <div class="col-md-6 mb-3">
+        <label class="form-label" for="dept_id">Department</label>
+        <select class="form-select" id="dept_id" name="dept_id" required>
+          <option value="">Choose</option>
+          {% for dept in departments %}
+          <option value="{{ dept.dept_id }}" {% if form.dept_id|string == dept.dept_id|string %}selected{% endif %}>{{ dept.dept_name }} · {{ dept.location }}</option>
+          {% endfor %}
+        </select>
+        <div class="form-text">Saved as dept_id, a foreign key to DEPARTMENT.</div>
+      </div>
+    </div>
+    <button class="btn btn-teal" type="submit">Save doctor</button>
+    <a class="btn btn-outline-secondary" href="{{ url_for('doctor_list') }}">Cancel</a>
+  </form>
+</div>
+{% endblock %}

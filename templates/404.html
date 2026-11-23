@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="panel panel-pad">
+  <h2>That page is not in the hospital register</h2>
+  <p class="muted">The address does not match a module. Use the side menu to get back.</p>
+  <a class="btn btn-teal" href="{{ url_for('dashboard') }}">Back to the dashboard</a>
+</div>
+{% endblock %}

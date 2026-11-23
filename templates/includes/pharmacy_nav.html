@@ -1,0 +1,4 @@
+<ul class="nav module-nav">
+  <li class="nav-item"><a class="nav-link {% if request.endpoint.startswith('medicine') %}active{% endif %}" href="{{ url_for('medicine_list') }}">Medicines</a></li>
+  <li class="nav-item"><a class="nav-link {% if request.endpoint.startswith('prescription') %}active{% endif %}" href="{{ url_for('prescription_list') }}">Prescriptions</a></li>
+</ul>

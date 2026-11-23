@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h2>Patients</h2>
+    <p class="schema-line"><code>PATIENT(patient_id, name, age, gender, phone, address)</code></p>
+  </div>
+  {% if can('patients_write') %}
+  <a class="btn btn-teal" href="{{ url_for('patient_add') }}">Register patient</a>
+  {% endif %}
+</div>
+<form class="search-form" method="get">
+  <input class="form-control" type="search" name="q" value="{{ term }}" placeholder="Search name, phone, or address">
+  <button class="btn btn-outline-secondary">Search</button>
+</form>
+<div class="panel">
+  {% if patients %}
+  <div class="table-responsive">
+    <table class="table mb-0">
+      <thead>
+        <tr><th>ID</th><th>Name</th><th>Age</th><th>Gender</th><th>Phone</th><th>Address</th><th></th></tr>
+      </thead>
+      <tbody>
+        {% for patient in patients %}
+        <tr>
+          <td>{{ patient.patient_id }}</td>
+          <td><a href="{{ url_for('patient_detail', patient_id=patient.patient_id) }}">{{ patient.name }}</a></td>
+          <td>{{ patient.age }}</td>
+          <td>{{ patient.gender }}</td>
+          <td>{{ patient.phone }}</td>
+          <td class="clip" title="{{ patient.address }}">{{ patient.address }}</td>
+          <td class="text-nowrap text-end">
+            <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('patient_detail', patient_id=patient.patient_id) }}">History</a>
+            {% if can('patients_write') %}
+            <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('patient_edit', patient_id=patient.patient_id) }}">Edit</a>
+            {% endif %}
+            {% if can('patients_delete') %}
+            <form method="post" action="{{ url_for('patient_delete', patient_id=patient.patient_id) }}" class="d-inline" onsubmit="return confirm('Delete this patient?');">
+              <button class="btn btn-sm btn-outline-danger">Delete</button>
+            </form>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="empty-state mb-0">No patients match that search.</p>
+  {% endif %}
+</div>
+{% endblock %}

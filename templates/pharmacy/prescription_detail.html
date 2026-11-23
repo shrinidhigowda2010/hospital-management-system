@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block content %}
+{% include "includes/pharmacy_nav.html" %}
+<div class="page-head">
+  <div>
+    <h2>Prescription {{ header.prescription_id }}</h2>
+    <p class="schema-line">{{ header.date|pretty_date }} · {{ header.patient_name }} · {{ header.doctor_name|doctor }}</p>
+  </div>
+  {% if can_edit_prescription(header.doctor_id) %}
+  <a class="btn btn-outline-secondary" href="{{ url_for('prescription_edit', prescription_id=header.prescription_id) }}">Edit</a>
+  {% endif %}
+</div>
+<div class="row g-3">
+  <div class="col-lg-4">
+    <section class="panel panel-pad">
+      <p class="mb-1"><strong>Patient</strong><br>{{ header.patient_name }}, {{ header.age }} yrs, {{ header.gender }}</p>
+      <p class="mb-1"><strong>Phone</strong><br>{{ header.phone }}</p>
+      <p class="mb-1"><strong>Doctor</strong><br>{{ header.doctor_name|doctor }}<br><span class="muted">{{ header.speciality }}</span></p>
+      <p class="mb-0"><strong>Diagnosis</strong><br>{{ header.diagnosis }}</p>
+    </section>
+  </div>
+  <div class="col-lg-8">
+    <section class="panel">
+      <div class="table-responsive">
+        <table class="table mb-0">
+          <thead><tr><th>Medicine</th><th>Dosage</th><th>Duration</th><th>Qty</th><th>Price</th></tr></thead>
+          <tbody>
+            {% for line in lines %}
+            <tr>
+              <td>{{ line.medicine_name }}</td>
+              <td>{{ line.dosage }}</td>
+              <td>{{ line.duration }}</td>
+              <td>{{ line.quantity }}</td>
+              <td>{{ line.unit_price|inr }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+</div>
+{% endblock %}

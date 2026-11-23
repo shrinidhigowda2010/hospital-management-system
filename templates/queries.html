@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h2>SQL queries</h2>
+    <p class="schema-line">The same statements are at the bottom of <code>schema.sql</code>, marked <code>-- @query</code>. Paste one into the sqlite3 shell in a viva.</p>
+  </div>
+</div>
+{% for query in queries %}
+<section class="panel panel-pad mb-3">
+  <h3 class="h5 mb-1">{{ loop.index }}. {{ query.title }}</h3>
+  <p class="muted">{{ query.about }}</p>
+  <pre class="sql-block">{{ query.sql }};</pre>
+  {% if query.error %}
+    <div class="alert alert-danger mt-3 mb-0">{{ query.error }}</div>
+  {% elif query.rows %}
+    <div class="table-responsive mt-3">
+      <table class="table table-sm mb-0">
+        <thead>
+          <tr>{% for column in query.columns %}<th>{{ column }}</th>{% endfor %}</tr>
+        </thead>
+        <tbody>
+          {% for row in query.rows %}
+          <tr>{% for column in query.columns %}<td>{{ row[column] }}</td>{% endfor %}</tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <p class="muted mb-0 mt-2">{{ query.rows|length }} row{{ '' if query.rows|length == 1 else 's' }}.</p>
+  {% else %}
+    <p class="empty-state mb-0">The query ran and returned no rows.</p>
+  {% endif %}
+</section>
+{% endfor %}
+{% endblock %}

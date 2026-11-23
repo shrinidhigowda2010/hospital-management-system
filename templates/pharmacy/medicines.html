@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block content %}
+{% include "includes/pharmacy_nav.html" %}
+<div class="page-head">
+  <div>
+    <h2>Medicines</h2>
+    <p class="schema-line"><code>MEDICINE(medicine_id, name, category, unit_price, stock_qty, expiry_date)</code></p>
+  </div>
+  {% if can('medicines_write') %}
+  <a class="btn btn-teal" href="{{ url_for('medicine_add') }}">Add medicine</a>
+  {% endif %}
+</div>
+<form class="search-form" method="get">
+  <input class="form-control" type="search" name="q" value="{{ term }}" placeholder="Name or category">
+  <button class="btn btn-outline-secondary">Search</button>
+</form>
+<div class="panel">
+  {% if medicines %}
+  <div class="table-responsive">
+    <table class="table mb-0">
+      <thead><tr><th>Name</th><th>Category</th><th>Price</th><th>Stock</th><th>Expiry</th><th></th></tr></thead>
+      <tbody>
+        {% for med in medicines %}
+        <tr class="{% if med.stock_qty < reorder_below %}row-low{% endif %}">
+          <td>{{ med.name }}</td>
+          <td>{{ med.category }}</td>
+          <td>{{ med.unit_price|inr }}</td>
+          <td>{{ med.stock_qty }}{% if med.stock_qty < reorder_below %} · low{% endif %}</td>
+          <td>{{ med.expiry_date|pretty_date }}{% if med.expiry_date|expiring %} · soon{% endif %}</td>
+          <td class="text-nowrap text-end">
+            {% if can('medicines_write') %}
+            <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('medicine_edit', medicine_id=med.medicine_id) }}">Edit</a>
+            <form method="post" action="{{ url_for('medicine_delete', medicine_id=med.medicine_id) }}" class="d-inline" onsubmit="return confirm('Delete this medicine?');">
+              <button class="btn btn-sm btn-outline-danger">Delete</button>
+            </form>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}<p class="empty-state mb-0">No medicines match that search.</p>{% endif %}
+</div>
+{% endblock %}

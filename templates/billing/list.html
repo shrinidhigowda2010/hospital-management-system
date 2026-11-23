@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h2>Billing</h2>
+    <p class="schema-line"><code>BILL(bill_id, patient_id, amount, date, status)</code></p>
+  </div>
+  {% if can('billing_write') %}
+  <a class="btn btn-teal" href="{{ url_for('bill_add') }}">New bill</a>
+  {% endif %}
+</div>
+<form class="search-form" method="get">
+  <input class="form-control" type="search" name="q" value="{{ term }}" placeholder="Patient name">
+  <select class="form-select" name="status" style="max-width:180px;">
+    <option value="">Any status</option>
+    {% for status_name in ['Unpaid', 'Partial', 'Paid'] %}
+    <option {% if status == status_name %}selected{% endif %}>{{ status_name }}</option>
+    {% endfor %}
+  </select>
+  <button class="btn btn-outline-secondary">Filter</button>
+</form>
+<div class="panel">
+  {% if bills %}
+  <div class="table-responsive">
+    <table class="table mb-0">
+      <thead><tr><th>Invoice</th><th>Patient</th><th>Date</th><th>Amount</th><th>Paid</th><th>Balance</th><th>Status</th><th></th></tr></thead>
+      <tbody>
+        {% for bill in bills %}
+        <tr>
+          <td><a href="{{ url_for('bill_invoice', bill_id=bill.bill_id) }}">{{ bill.bill_id|billno }}</a></td>
+          <td>{{ bill.patient }}</td>
+          <td>{{ bill.date|pretty_date }}</td>
+          <td>{{ bill.amount|inr }}</td>
+          <td>{{ bill.paid|inr }}</td>
+          <td>{{ bill.balance|inr }}</td>
+          <td><span class="badge text-bg-{{ bill.status|badge }}">{{ bill.status }}</span></td>
+          <td class="text-nowrap text-end">
+            <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('bill_invoice', bill_id=bill.bill_id) }}">Invoice</a>
+            {% if can('billing_write') %}
+            <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('bill_edit', bill_id=bill.bill_id) }}">Edit</a>
+            <form method="post" action="{{ url_for('bill_delete', bill_id=bill.bill_id) }}" class="d-inline" onsubmit="return confirm('Delete this bill and its payments?');">
+              <button class="btn btn-sm btn-outline-danger">Delete</button>
+            </form>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}<p class="empty-state mb-0">No bills match that filter.</p>{% endif %}
+</div>
+{% endblock %}

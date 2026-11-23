@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Sign in · Sanjeevani HMS{% endblock %}
+{% block body %}
+<div class="login-shell">
+  <section class="login-brand">
+    <div>
+      <div class="brand-mark mb-3">+</div>
+      <p class="mb-2" style="letter-spacing:.08em; text-transform:uppercase; font-size:.78rem;">DBMS case study</p>
+      <h1>Hospital Management System</h1>
+      <p>Sanjeevani Multispeciality Hospital, Bengaluru. Patients, doctors, beds, and bills live in one relational database.</p>
+      <ul class="login-points">
+        <li>Eight modules, each with its own tables.</li>
+        <li>Foreign keys on every relationship.</li>
+        <li>Payments, admissions, and prescriptions commit as transactions.</li>
+      </ul>
+    </div>
+    <p class="mb-0" style="color:#9fb3c8;">Normalised to 3NF · SQLite · raw SQL</p>
+  </section>
+  <section class="login-panel">
+    <div class="login-card">
+      <h2 class="h4 mb-1">Sign in</h2>
+      <p class="muted mb-3">Use a classroom account. Passwords are stored as hashes.</p>
+      {% if error %}
+        <div class="alert alert-danger">{{ error }}</div>
+      {% endif %}
+      <form method="post" autocomplete="off">
+        <div class="mb-3">
+          <label class="form-label" for="username">Username</label>
+          <input class="form-control" id="username" name="username" required autofocus>
+        </div>
+        <div class="mb-3">
+          <label class="form-label" for="password">Password</label>
+          <input class="form-control" id="password" name="password" type="password" required>
+        </div>
+        <button class="btn btn-teal w-100" type="submit">Enter the hospital</button>
+      </form>
+      <table class="demo-accounts mt-3">
+        <thead><tr><th>Role</th><th>Username</th><th>Password</th></tr></thead>
+        <tbody>
+          <tr><td>Admin</td><td><code>admin</code></td><td><code>admin123</code></td></tr>
+          <tr><td>Doctor</td><td><code>doctor</code></td><td><code>doctor123</code></td></tr>
+          <tr><td>Nurse</td><td><code>nurse</code></td><td><code>nurse123</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>
+{% endblock %}

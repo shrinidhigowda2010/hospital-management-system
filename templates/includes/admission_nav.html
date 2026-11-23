@@ -1,0 +1,5 @@
+<ul class="nav module-nav">
+  <li class="nav-item"><a class="nav-link {% if request.endpoint.startswith('admission') %}active{% endif %}" href="{{ url_for('admission_list') }}">Admissions</a></li>
+  <li class="nav-item"><a class="nav-link {% if request.endpoint.startswith('ward') %}active{% endif %}" href="{{ url_for('ward_list') }}">Wards</a></li>
+  <li class="nav-item"><a class="nav-link {% if request.endpoint.startswith('bed') %}active{% endif %}" href="{{ url_for('bed_list') }}">Beds</a></li>
+</ul>

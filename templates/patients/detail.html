@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h2>{{ patient.name }}</h2>
+    <p class="schema-line">patient_id {{ patient.patient_id }} · {{ patient.age }} yrs · {{ patient.gender }}</p>
+  </div>
+  <div class="d-flex gap-2">
+    {% if can('patients_write') %}
+    <a class="btn btn-outline-secondary" href="{{ url_for('patient_edit', patient_id=patient.patient_id) }}">Edit</a>
+    {% endif %}
+    <a class="btn btn-outline-secondary" href="{{ url_for('patient_list') }}">All patients</a>
+  </div>
+</div>
+<div class="row g-3">
+  <div class="col-lg-4">
+    <section class="panel panel-pad">
+      <h3 class="h6">Contact</h3>
+      <p class="mb-1"><strong>Phone</strong><br>{{ patient.phone }}</p>
+      <p class="mb-0"><strong>Address</strong><br>{{ patient.address }}</p>
+    </section>
+  </div>
+  <div class="col-lg-8">
+    <section class="panel panel-pad">
+      <h3 class="h6">Clinical history</h3>
+      {% if history %}
+      <div class="table-responsive">
+        <table class="table table-sm">
+          <thead><tr><th>Date</th><th>Diagnosis</th><th>Doctor</th><th>Notes</th><th></th></tr></thead>
+          <tbody>
+            {% for note in history %}
+            <tr>
+              <td>{{ note.visit_date|pretty_date }}</td>
+              <td>{{ note.diagnosis }}</td>
+              <td>{{ note.doctor_name|doctor }}</td>
+              <td>{{ note.notes or "—" }}</td>
+              <td class="text-nowrap">
+                {% if can('history_write') %}
+                <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('history_edit', patient_id=patient.patient_id, history_id=note.history_id) }}">Edit</a>
+                {% endif %}
+                {% if can_delete_history(note) %}
+                <form method="post" action="{{ url_for('history_delete', patient_id=patient.patient_id, history_id=note.history_id) }}" class="d-inline" onsubmit="return confirm('Delete this note?');">
+                  <button class="btn btn-sm btn-outline-danger">Delete</button>
+                </form>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <p class="muted">No history notes yet. Appointments and admissions below are still part of the record.</p>
+      {% endif %}
+      {% if can('history_write') %}
+      <form method="post" action="{{ url_for('history_add', patient_id=patient.patient_id) }}" class="row g-2">
+        <div class="col-md-3">
+          <input class="form-control" type="date" name="visit_date" value="{{ today }}" required>
+        </div>
+        <div class="col-md-4">
+          <select class="form-select" name="doctor_id">
+            <option value="">Doctor (optional)</option>
+            {% for doctor in doctors %}
+            <option value="{{ doctor.doctor_id }}" {% if session.role == 'doctor' and session.doctor_id == doctor.doctor_id %}selected{% endif %}>Dr. {{ doctor.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-5">
+          <input class="form-control" name="diagnosis" placeholder="Diagnosis" required>
+        </div>
+        <div class="col-12">
+          <input class="form-control" name="notes" placeholder="Notes">
+        </div>
+        <div class="col-12">
+          <button class="btn btn-teal btn-sm" type="submit">Add history note</button>
+        </div>
+      </form>
+      {% endif %}
+    </section>
+  </div>
+  <div class="col-lg-6">
+    <section class="panel">
+      <div class="panel-pad pb-0"><h3 class="h6">Appointments</h3></div>
+      {% if appointments %}
+      <div class="table-responsive">
+        <table class="table table-sm mb-0">
+          <thead><tr><th>When</th><th>Doctor</th><th>Status</th></tr></thead>
+          <tbody>
+            {% for row in appointments %}
+            <tr>
+              <td>{{ row.date|pretty_date }} {{ row.time }}</td>
+              <td>{{ row.doctor_name|doctor }}</td>
+              <td><span class="badge text-bg-{{ row.status|badge }}">{{ row.status }}</span></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}<p class="empty-state mb-0">No appointments.</p>{% endif %}
+    </section>
+  </div>
+  <div class="col-lg-6">
+    <section class="panel">
+      <div class="panel-pad pb-0"><h3 class="h6">Admissions</h3></div>
+      {% if admissions %}
+      <div class="table-responsive">
+        <table class="table table-sm mb-0">
+          <thead><tr><th>Admitted</th><th>Bed</th><th>Status</th></tr></thead>
+          <tbody>
+            {% for row in admissions %}
+            <tr>
+              <td>{{ row.admit_date|pretty_date }}</td>
+              <td>{{ row.ward_name }} {{ row.bed_number }}</td>
+              <td><span class="badge text-bg-{{ row.status|badge }}">{{ row.status }}</span></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}<p class="empty-state mb-0">No admissions.</p>{% endif %}
+    </section>
+  </div>
+  <div class="col-lg-6">
+    <section class="panel">
+      <div class="panel-pad pb-0"><h3 class="h6">Prescriptions</h3></div>
+      {% if prescriptions %}
+      <div class="table-responsive">
+        <table class="table table-sm mb-0">
+          <thead><tr><th>Date</th><th>Diagnosis</th><th>Medicines</th></tr></thead>
+          <tbody>
+            {% for row in prescriptions %}
+            <tr>
+              <td><a href="{{ url_for('prescription_detail', prescription_id=row.prescription_id) }}">{{ row.date|pretty_date }}</a></td>
+              <td>{{ row.diagnosis }}</td>
+              <td>{{ row.medicine_count }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}<p class="empty-state mb-0">No prescriptions.</p>{% endif %}
+    </section>
+  </div>
+  <div class="col-lg-6">
+    <section class="panel">
+      <div class="panel-pad pb-0"><h3 class="h6">Bills</h3></div>
+      {% if bills %}
+      <div class="table-responsive">
+        <table class="table table-sm mb-0">
+          <thead><tr><th>Invoice</th><th>Amount</th><th>Balance</th><th>Status</th></tr></thead>
+          <tbody>
+            {% for row in bills %}
+            <tr>
+              <td><a href="{{ url_for('bill_invoice', bill_id=row.bill_id) }}">{{ row.bill_id|billno }}</a></td>
+              <td>{{ row.amount|inr }}</td>
+              <td>{{ row.balance|inr }}</td>
+              <td><span class="badge text-bg-{{ row.status|badge }}">{{ row.status }}</span></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}<p class="empty-state mb-0">No bills.</p>{% endif %}
+    </section>
+  </div>
+</div>
+{% endblock %}

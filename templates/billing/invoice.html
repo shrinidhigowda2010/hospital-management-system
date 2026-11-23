@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-head no-print">
+  <div>
+    <h2>{{ bill.bill_id|billno }}</h2>
+    <p class="schema-line">Invoice for {{ patient.name }} · <span class="badge text-bg-{{ bill.status|badge }}">{{ bill.status }}</span></p>
+  </div>
+  <div class="d-flex gap-2">
+    <button class="btn btn-outline-secondary" type="button" onclick="window.print()">Print</button>
+    {% if can('billing_write') %}
+    <a class="btn btn-outline-secondary" href="{{ url_for('bill_edit', bill_id=bill.bill_id) }}">Edit charges</a>
+    {% endif %}
+  </div>
+</div>
+<article class="panel panel-pad invoice">
+  <div class="invoice-head">
+    <div>
+      <strong>{{ hospital }}</strong>
+      <div class="muted">Bengaluru · Hospital Management System</div>
+    </div>
+    <div class="text-md-end">
+      <strong>{{ bill.bill_id|billno }}</strong>
+      <div>{{ bill.date|pretty_date }}</div>
+    </div>
+  </div>
+  <div class="row my-3">
+    <div class="col-md-6">
+      <div class="muted">Billed to</div>
+      <strong>{{ patient.name }}</strong>
+      <div>{{ patient.age }} yrs · {{ patient.gender }}</div>
+      <div>{{ patient.phone }}</div>
+      <div>{{ patient.address }}</div>
+    </div>
+    <div class="col-md-6 text-md-end">
+      <div class="muted">Patient id {{ patient.patient_id }}</div>
+      <div>Status: {{ bill.status }}</div>
+    </div>
+  </div>
+  <table class="table">
+    <thead><tr><th>Charge</th><th class="text-end">Amount</th></tr></thead>
+    <tbody>
+      {% for item in items %}
+      <tr><td>{{ item.description }}</td><td class="text-end">{{ item.amount|inr }}</td></tr>
+      {% endfor %}
+      <tr><th>Total</th><th class="text-end">{{ bill.amount|inr }}</th></tr>
+      <tr><td>Paid</td><td class="text-end">{{ bill.paid|inr }}</td></tr>
+      <tr><td>Balance</td><td class="text-end">{{ bill.balance|inr }}</td></tr>
+    </tbody>
+  </table>
+  <h3 class="h6">Receipts</h3>
+  {% if payments %}
+  <table class="table table-sm">
+    <thead><tr><th>Date</th><th>Method</th><th class="text-end">Amount</th><th></th></tr></thead>
+    <tbody>
+      {% for payment in payments %}
+      <tr>
+        <td>{{ payment.pay_date|pretty_date }}</td>
+        <td>{{ payment.method }}</td>
+        <td class="text-end">{{ payment.amount|inr }}</td>
+        <td class="text-end no-print">
+          {% if can('billing_write') %}
+          <form method="post" action="{{ url_for('payment_delete', bill_id=bill.bill_id, payment_id=payment.payment_id) }}" class="d-inline" onsubmit="return confirm('Remove this payment and recalculate the status?');">
+            <button class="btn btn-sm btn-outline-danger">Remove</button>
+          </form>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="muted">No payments yet.</p>
+  {% endif %}
+  <div class="sign-line">Cashier</div>
+</article>
+{% if can('billing_write') and bill.balance > 0 %}
+<section class="panel panel-pad mt-3 no-print" style="max-width:860px; margin-left:auto; margin-right:auto;">
+  <h3 class="h6">Record a payment</h3>
+  <p class="muted">This runs two statements in one transaction. If either one fails, neither is kept.</p>
+  <pre class="sql-block mb-3">BEGIN;
+INSERT INTO PAYMENT (bill_id, amount, pay_date, method) VALUES ({{ bill.bill_id }}, ?, ?, ?);
+UPDATE BILL SET status = 'Paid' OR 'Partial' OR 'Unpaid' WHERE bill_id = {{ bill.bill_id }};
+COMMIT;</pre>
+  <form method="post" action="{{ url_for('payment_add', bill_id=bill.bill_id) }}" class="row g-2">
+    <div class="col-md-3">
+      <label class="form-label" for="amount">Amount</label>
+      <input class="form-control" id="amount" name="amount" inputmode="numeric" value="{{ bill.balance }}" required>
+    </div>
+    <div class="col-md-3">
+      <label class="form-label" for="method">Method</label>
+      <select class="form-select" id="method" name="method">
+        {% for method in pay_methods %}<option>{{ method }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="col-md-3">
+      <label class="form-label" for="pay_date">Date</label>
+      <input class="form-control" type="date" id="pay_date" name="pay_date" value="{{ today }}" required>
+    </div>
+    <div class="col-md-3 d-flex align-items-end">
+      <button class="btn btn-teal w-100" type="submit">Record payment</button>
+    </div>
+  </form>
+</section>
+{% endif %}
+{% endblock %}

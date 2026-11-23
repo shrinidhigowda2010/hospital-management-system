@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% block content %}
+{% include "includes/pharmacy_nav.html" %}
+<div class="page-head">
+  <div>
+    <h2>{{ page_title }}</h2>
+    <p class="schema-line">Dropdowns supply the foreign keys. Medicines are rows in <code>PRESCRIPTION_MEDICINE</code>.</p>
+  </div>
+</div>
+<div class="panel panel-pad">
+  {% if errors %}
+  <div class="alert alert-danger"><ul class="mb-0">{% for error in errors %}<li>{{ error }}</li>{% endfor %}</ul></div>
+  {% endif %}
+  <pre class="sql-block mb-3">BEGIN;
+INSERT INTO PRESCRIPTION (patient_id, doctor_id, date, diagnosis) VALUES (?, ?, ?, ?);
+INSERT INTO PRESCRIPTION_MEDICINE (prescription_id, medicine_id, dosage, duration, quantity) VALUES (?, ?, ?, ?, ?);
+UPDATE MEDICINE SET stock_qty = stock_qty - ? WHERE medicine_id = ?;
+COMMIT;
+-- If any medicine is short of stock, ROLLBACK undoes the whole prescription.</pre>
+  <form method="post">
+    <div class="row">
+      <div class="col-md-6 mb-3">
+        <label class="form-label" for="patient_id">Patient</label>
+        <select class="form-select" id="patient_id" name="patient_id" required>
+          <option value="">Choose a registered patient</option>
+          {% for patient in patients %}
+          <option value="{{ patient.patient_id }}" {% if form.patient_id|string == patient.patient_id|string %}selected{% endif %}>{{ patient.name }} · {{ patient.age }} yrs · {{ patient.phone }}</option>
+          {% endfor %}
+        </select>
+        <div class="form-text">Foreign key patient_id → PATIENT.</div>
+      </div>
+      <div class="col-md-6 mb-3">
+        <label class="form-label" for="doctor_id">Doctor</label>
+        <select class="form-select" id="doctor_id" name="doctor_id" {% if locked_doctor %}disabled{% endif %} required>
+          <option value="">Choose a doctor</option>
+          {% for doctor in doctors %}
+          <option value="{{ doctor.doctor_id }}" {% if form.doctor_id|string == doctor.doctor_id|string %}selected{% endif %}>Dr. {{ doctor.name }} · {{ doctor.speciality }}</option>
+          {% endfor %}
+        </select>
+        {% if locked_doctor %}
+        <input type="hidden" name="doctor_id" value="{{ form.doctor_id }}">
+        <div class="form-text">Your login is tied to this doctor_id.</div>
+        {% else %}
+        <div class="form-text">Foreign key doctor_id → DOCTOR.</div>
+        {% endif %}
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-4 mb-3">
+        <label class="form-label" for="date">Date</label>
+        <input class="form-control" type="date" id="date" name="date" value="{{ form.date }}" required>
+      </div>
+      <div class="col-md-8 mb-3">
+        <label class="form-label" for="diagnosis">Diagnosis</label>
+        <input class="form-control" id="diagnosis" name="diagnosis" value="{{ form.diagnosis }}" required>
+      </div>
+    </div>
+    <h3 class="h6">Medicines</h3>
+    <div class="table-responsive">
+      <table class="table" id="lines">
+        <thead>
+          <tr><th style="width:3rem;">#</th><th>Medicine</th><th>Dosage</th><th>Duration</th><th style="width:7rem;">Qty</th><th></th></tr>
+        </thead>
+        <tbody>
+          {% for line in lines %}
+          <tr>
+            <td data-row-label>{{ loop.index }}</td>
+            <td>
+              <select class="form-select" name="medicine_id">
+                <option value="">Choose</option>
+                {% for medicine in medicines %}
+                <option value="{{ medicine.medicine_id }}" {% if line.medicine_id|string == medicine.medicine_id|string %}selected{% endif %}>{{ medicine.name }} · stock {{ medicine.stock_qty }} · {{ medicine.unit_price|inr }}</option>
+                {% endfor %}
+              </select>
+            </td>
+            <td><input class="form-control" name="dosage" value="{{ line.dosage }}" placeholder="1 tablet twice a day"></td>
+            <td><input class="form-control" name="duration" value="{{ line.duration }}" placeholder="5 days"></td>
+            <td><input class="form-control" name="quantity" inputmode="numeric" value="{{ line.quantity }}"></td>
+            <td><button class="btn btn-sm btn-outline-danger" type="button" data-remove-row>Remove</button></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <button class="btn btn-outline-secondary btn-sm mb-3" type="button" data-add-row="#lines tbody">Add medicine</button>
+    <div>
+      <button class="btn btn-teal" type="submit">Save prescription</button>
+      <a class="btn btn-outline-secondary" href="{{ url_for('prescription_list') }}">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/form-rows.js') }}"></script>
+{% endblock %}

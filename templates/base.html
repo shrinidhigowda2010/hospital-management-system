@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}{{ page_title }} · Sanjeevani HMS{% endblock %}</title>
+  <link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='vendor/bootstrap.min.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='vendor/bootstrap-icons/bootstrap-icons.min.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+{% macro links() %}
+<a class="side-link {% if nav_on('dashboard') %}active{% endif %}" href="{{ url_for('dashboard') }}"><i class="bi bi-speedometer2"></i><span>Dashboard</span></a>
+<a class="side-link {% if nav_on('patients') %}active{% endif %}" href="{{ url_for('patient_list') }}"><i class="bi bi-people"></i><span>Patients</span></a>
+<a class="side-link {% if nav_on('doctors') %}active{% endif %}" href="{{ url_for('doctor_list') }}"><i class="bi bi-heart-pulse"></i><span>Doctors</span></a>
+<a class="side-link {% if nav_on('departments') %}active{% endif %}" href="{{ url_for('department_list') }}"><i class="bi bi-building"></i><span>Departments</span></a>
+<a class="side-link {% if nav_on('appointments') %}active{% endif %}" href="{{ url_for('appointment_list') }}"><i class="bi bi-calendar2-check"></i><span>Appointments</span></a>
+<a class="side-link {% if nav_on('billing') %}active{% endif %}" href="{{ url_for('bill_list') }}"><i class="bi bi-receipt"></i><span>Billing</span></a>
+<a class="side-link {% if nav_on('pharmacy') %}active{% endif %}" href="{{ url_for('medicine_list') }}"><i class="bi bi-capsule"></i><span>Pharmacy</span></a>
+<a class="side-link {% if nav_on('admissions') %}active{% endif %}" href="{{ url_for('admission_list') }}"><i class="bi bi-hospital"></i><span>Admissions</span></a>
+<a class="side-link {% if nav_on('queries') %}active{% endif %}" href="{{ url_for('viva_queries') }}"><i class="bi bi-database"></i><span>SQL queries</span></a>
+{% endmacro %}
+{% block body %}
+<div class="app-shell d-flex">
+  <aside class="sidebar d-none d-lg-block">
+    <a class="brand" href="{{ url_for('dashboard') }}">
+      <span class="brand-mark">+</span>
+      <span>
+        <span class="brand-name">Hospital MS</span>
+        <span class="brand-sub">Sanjeevani, Bengaluru</span>
+      </span>
+    </a>
+    {{ links() }}
+  </aside>
+  <div class="main-wrap">
+    <header class="topbar">
+      <div class="d-flex align-items-center gap-2">
+        <button class="btn btn-outline-secondary d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileNav" aria-label="Open menu">
+          <i class="bi bi-list"></i>
+        </button>
+        <h1>Hospital Management System</h1>
+      </div>
+      <div class="who">
+        <div class="text-end">
+          <div class="who-name">{{ signed_in_name() }}</div>
+          <div class="who-role">{{ session.role }}</div>
+        </div>
+        <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('logout') }}">Log out</a>
+      </div>
+    </header>
+    <div class="content">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+        {% endfor %}
+      {% endwith %}
+      {% block content %}{% endblock %}
+    </div>
+  </div>
+</div>
+<div class="offcanvas offcanvas-start" tabindex="-1" id="mobileNav" style="background:#0e2433; color:#d9e2ec; width:260px;">
+  <div class="offcanvas-header">
+    <h2 class="offcanvas-title fs-6 text-white">Sanjeevani HMS</h2>
+    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+  </div>
+  <div class="offcanvas-body">
+    {{ links() }}
+  </div>
+</div>
+{% endblock %}
+<script src="{{ url_for('static', filename='vendor/bootstrap.bundle.min.js') }}"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

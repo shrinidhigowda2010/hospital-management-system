@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h2>Departments</h2>
+    <p class="schema-line"><code>DEPARTMENT(dept_id, dept_name, location)</code></p>
+  </div>
+  {% if can('departments_write') %}
+  <a class="btn btn-teal" href="{{ url_for('department_add') }}">Add department</a>
+  {% endif %}
+</div>
+<div class="panel">
+  <div class="table-responsive">
+    <table class="table mb-0">
+      <thead><tr><th>ID</th><th>Name</th><th>Location</th><th>Doctors</th><th></th></tr></thead>
+      <tbody>
+        {% for dept in departments %}
+        <tr>
+          <td>{{ dept.dept_id }}</td>
+          <td>{{ dept.dept_name }}</td>
+          <td>{{ dept.location }}</td>
+          <td>{{ dept.doctor_count }}</td>
+          <td class="text-end text-nowrap">
+            {% if can('departments_write') %}
+            <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('department_edit', dept_id=dept.dept_id) }}">Edit</a>
+            <form method="post" action="{{ url_for('department_delete', dept_id=dept.dept_id) }}" class="d-inline" onsubmit="return confirm('Delete this department?');">
+              <button class="btn btn-sm btn-outline-danger">Delete</button>
+            </form>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

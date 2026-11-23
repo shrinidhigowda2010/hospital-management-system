@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h2>Doctors</h2>
+    <p class="schema-line"><code>DOCTOR(doctor_id, name, speciality, phone, dept_id)</code></p>
+  </div>
+  {% if can('doctors_write') %}
+  <a class="btn btn-teal" href="{{ url_for('doctor_add') }}">Add doctor</a>
+  {% endif %}
+</div>
+<form class="search-form" method="get">
+  <input class="form-control" type="search" name="q" value="{{ term }}" placeholder="Search name, speciality, or department">
+  <button class="btn btn-outline-secondary">Search</button>
+</form>
+<div class="panel">
+  {% if doctors %}
+  <div class="table-responsive">
+    <table class="table mb-0">
+      <thead><tr><th>ID</th><th>Name</th><th>Speciality</th><th>Department</th><th>Phone</th><th></th></tr></thead>
+      <tbody>
+        {% for doctor in doctors %}
+        <tr>
+          <td>{{ doctor.doctor_id }}</td>
+          <td><a href="{{ url_for('doctor_detail', doctor_id=doctor.doctor_id) }}">{{ doctor.name|doctor }}</a></td>
+          <td>{{ doctor.speciality }}</td>
+          <td>{{ doctor.dept_name }}</td>
+          <td>{{ doctor.phone }}</td>
+          <td class="text-nowrap text-end">
+            <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('doctor_detail', doctor_id=doctor.doctor_id) }}">Schedule</a>
+            {% if can('doctors_write') %}
+            <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('doctor_edit', doctor_id=doctor.doctor_id) }}">Edit</a>
+            <form method="post" action="{{ url_for('doctor_delete', doctor_id=doctor.doctor_id) }}" class="d-inline" onsubmit="return confirm('Delete this doctor?');">
+              <button class="btn btn-sm btn-outline-danger">Delete</button>
+            </form>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}<p class="empty-state mb-0">No doctors match that search.</p>{% endif %}
+</div>
+{% endblock %}

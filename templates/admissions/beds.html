@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block content %}
+{% include "includes/admission_nav.html" %}
+<div class="page-head">
+  <div>
+    <h2>Beds</h2>
+    <p class="schema-line"><code>BED(bed_id, ward_id, bed_number, status)</code></p>
+  </div>
+  {% if can('beds_write') %}
+  <a class="btn btn-teal" href="{{ url_for('bed_add') }}">Add bed</a>
+  {% endif %}
+</div>
+<div class="panel">
+  <div class="table-responsive">
+    <table class="table mb-0">
+      <thead><tr><th>Ward</th><th>Bed</th><th>Status</th><th>Current patient</th><th></th></tr></thead>
+      <tbody>
+        {% for bed in beds %}
+        <tr>
+          <td>{{ bed.ward_name }}</td>
+          <td>{{ bed.bed_number }}</td>
+          <td><span class="badge text-bg-{{ bed.status|badge }}">{{ bed.status }}</span></td>
+          <td>{{ bed.patient_name or "—" }}</td>
+          <td class="text-end text-nowrap">
+            {% if can('beds_write') %}
+            <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('bed_edit', bed_id=bed.bed_id) }}">Edit</a>
+            <form method="post" action="{{ url_for('bed_delete', bed_id=bed.bed_id) }}" class="d-inline" onsubmit="return confirm('Delete this bed?');">
+              <button class="btn btn-sm btn-outline-danger">Delete</button>
+            </form>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

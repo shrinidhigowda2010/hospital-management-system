@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block content %}
+{% include "includes/admission_nav.html" %}
+<div class="page-head">
+  <div>
+    <h2>{{ page_title }}</h2>
+    <p class="schema-line"><code>BED(bed_id, ward_id, bed_number, status)</code></p>
+  </div>
+</div>
+<div class="panel panel-pad" style="max-width:640px;">
+  {% if errors %}
+  <div class="alert alert-danger"><ul class="mb-0">{% for error in errors %}<li>{{ error }}</li>{% endfor %}</ul></div>
+  {% endif %}
+  <form method="post">
+    <div class="mb-3">
+      <label class="form-label" for="ward_id">Ward</label>
+      <select class="form-select" id="ward_id" name="ward_id" required>
+        <option value="">Choose a ward</option>
+        {% for ward in wards %}
+        <option value="{{ ward.ward_id }}" {% if form.ward_id|string == ward.ward_id|string %}selected{% endif %}>{{ ward.ward_name }}</option>
+        {% endfor %}
+      </select>
+      <div class="form-text">Saved as ward_id, a foreign key to WARD.</div>
+    </div>
+    <div class="mb-3">
+      <label class="form-label" for="bed_number">Bed number</label>
+      <input class="form-control" id="bed_number" name="bed_number" value="{{ form.bed_number }}" required>
+    </div>
+    <div class="mb-3">
+      <label class="form-label" for="status">Status</label>
+      {% if locked_status %}
+      <input class="form-control" value="Occupied" disabled>
+      <div class="form-text">Discharge the patient to free this bed. Occupied is not set by hand.</div>
+      {% else %}
+      <select class="form-select" id="status" name="status">
+        {% for status_name in bed_choices %}
+        <option {% if form.status == status_name %}selected{% endif %}>{{ status_name }}</option>
+        {% endfor %}
+      </select>
+      {% endif %}
+    </div>
+    <button class="btn btn-teal" type="submit">Save bed</button>
+    <a class="btn btn-outline-secondary" href="{{ url_for('bed_list') }}">Cancel</a>
+  </form>
+</div>
+{% endblock %}

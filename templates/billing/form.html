@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h2>{{ page_title }}</h2>
+    <p class="schema-line"><code>BILL(bill_id, patient_id, amount, date, status)</code> and <code>BILL_ITEM(item_id, bill_id, description, amount)</code></p>
+  </div>
+</div>
+<div class="panel panel-pad">
+  {% if errors %}
+  <div class="alert alert-danger"><ul class="mb-0">{% for error in errors %}<li>{{ error }}</li>{% endfor %}</ul></div>
+  {% endif %}
+  <form method="post">
+    <div class="row">
+      <div class="col-md-8 mb-3">
+        <label class="form-label" for="patient_id">Patient</label>
+        <select class="form-select" id="patient_id" name="patient_id" required>
+          <option value="">Choose a patient</option>
+          {% for patient in patients %}
+          <option value="{{ patient.patient_id }}" {% if form.patient_id|string == patient.patient_id|string %}selected{% endif %}>{{ patient.name }} · {{ patient.phone }}</option>
+          {% endfor %}
+        </select>
+        <div class="form-text">Saved as patient_id. Status starts as Unpaid until a payment is recorded.</div>
+      </div>
+      <div class="col-md-4 mb-3">
+        <label class="form-label" for="date">Bill date</label>
+        <input class="form-control" type="date" id="date" name="date" value="{{ form.date }}" required>
+      </div>
+    </div>
+    <h3 class="h6">Charges</h3>
+    <div class="table-responsive">
+      <table class="table" id="charges">
+        <thead><tr><th style="width:4rem;">#</th><th>Description</th><th style="width:12rem;">Amount (₹)</th><th></th></tr></thead>
+        <tbody>
+          {% for item in items %}
+          <tr>
+            <td data-row-label>{{ loop.index }}</td>
+            <td><input class="form-control" name="description" value="{{ item.description }}" placeholder="Consultation, bed, lab..."></td>
+            <td><input class="form-control" name="item_amount" inputmode="numeric" value="{{ item.amount }}"></td>
+            <td><button class="btn btn-sm btn-outline-danger" type="button" data-remove-row>Remove</button></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <button class="btn btn-outline-secondary btn-sm mb-3" type="button" data-add-row="#charges tbody">Add charge</button>
+    {% if not bill_id %}
+    <h3 class="h6">Payment received now (optional)</h3>
+    <p class="muted">If you fill this in, the receipt and the bill status are written in the same transaction.</p>
+    <div class="row">
+      <div class="col-md-4 mb-3">
+        <label class="form-label" for="pay_amount">Amount</label>
+        <input class="form-control" id="pay_amount" name="pay_amount" inputmode="numeric" value="{{ form.pay_amount or '' }}">
+      </div>
+      <div class="col-md-4 mb-3">
+        <label class="form-label" for="pay_method">Method</label>
+        <select class="form-select" id="pay_method" name="pay_method">
+          {% for method in pay_methods %}
+          <option {% if form.pay_method == method %}selected{% endif %}>{{ method }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-4 mb-3">
+        <label class="form-label" for="pay_date">Paid on</label>
+        <input class="form-control" type="date" id="pay_date" name="pay_date" value="{{ form.pay_date or today }}">
+      </div>
+    </div>
+    {% endif %}
+    <button class="btn btn-teal" type="submit">Save bill</button>
+    <a class="btn btn-outline-secondary" href="{{ url_for('bill_list') }}">Cancel</a>
+  </form>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/form-rows.js') }}"></script>
+{% endblock %}

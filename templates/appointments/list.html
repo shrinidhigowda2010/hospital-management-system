@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h2>Appointments</h2>
+    <p class="schema-line"><code>APPOINTMENT(appt_id, patient_id, doctor_id, date, time, status)</code></p>
+  </div>
+  {% if can('appointments_write') %}
+  <a class="btn btn-teal" href="{{ url_for('appointment_add') }}">Book slot</a>
+  {% endif %}
+</div>
+<form class="search-form" method="get">
+  <input class="form-control" type="search" name="q" value="{{ term }}" placeholder="Patient or doctor">
+  <input class="form-control" type="date" name="date" value="{{ day }}" style="max-width:180px;">
+  <select class="form-select" name="status" style="max-width:180px;">
+    <option value="">Any status</option>
+    {% for status_name in appt_statuses %}
+    <option value="{{ status_name }}" {% if status == status_name %}selected{% endif %}>{{ status_name }}</option>
+    {% endfor %}
+  </select>
+  <button class="btn btn-outline-secondary">Filter</button>
+</form>
+<div class="panel">
+  {% if appointments %}
+  <div class="table-responsive">
+    <table class="table mb-0">
+      <thead><tr><th>Queue</th><th>Date</th><th>Time</th><th>Patient</th><th>Doctor</th><th>Status</th><th></th></tr></thead>
+      <tbody>
+        {% for row in appointments %}
+        <tr>
+          <td>{{ row.queue_no or "—" }}</td>
+          <td>{{ row.date|pretty_date }}</td>
+          <td>{{ row.time }}</td>
+          <td><a href="{{ url_for('patient_detail', patient_id=row.patient_id) }}">{{ row.patient_name }}</a></td>
+          <td>{{ row.doctor_name|doctor }}</td>
+          <td>
+            {% if can_touch_appointment(row.doctor_id) %}
+            <form method="post" action="{{ url_for('appointment_status', appt_id=row.appt_id) }}" class="d-flex gap-1">
+              <select class="form-select form-select-sm" name="status">
+                {% for status_name in appt_statuses %}
+                <option {% if row.status == status_name %}selected{% endif %}>{{ status_name }}</option>
+                {% endfor %}
+              </select>
+              <button class="btn btn-sm btn-outline-secondary">Update</button>
+            </form>
+            {% else %}
+            <span class="badge text-bg-{{ row.status|badge }}">{{ row.status }}</span>
+            {% endif %}
+          </td>
+          <td class="text-nowrap text-end">
+            {% if can('appointments_write') %}
+            <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('appointment_edit', appt_id=row.appt_id) }}">Edit</a>
+            <form method="post" action="{{ url_for('appointment_delete', appt_id=row.appt_id) }}" class="d-inline" onsubmit="return confirm('Delete this appointment?');">
+              <button class="btn btn-sm btn-outline-danger">Delete</button>
+            </form>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}<p class="empty-state mb-0">No appointments match that filter.</p>{% endif %}
+</div>
+{% endblock %}
